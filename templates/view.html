@@ -1,0 +1,13 @@
+{% extends 'base.html' %} 
+{% block content %}
+<div class="card shadow-lg p-3 mb-5 bg-body rounded" id="view">
+    <form action="/admin" method="POST">    
+        <div class="mb-3">
+            <label for="exampleInputPassword1" class="form-label" >Vehicle Number</label>
+            <input type="text" name="vehicle" class="form-control" id="exampleInputPassword1" autocomplete="off" placeholder="Enter without spaces" required>
+          </div>   
+      <button type="submit" class="btn btn-primary btn-lg" >View</button>
+      </form>
+    </div>
+
+{% endblock %}
