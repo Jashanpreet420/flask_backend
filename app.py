@@ -38,7 +38,19 @@ class master1(db.Model):
 def showit():
     if login_ornot is False:
         return render_template('login.html')
-    return render_template('admin.html')
+    dis_vehicle= db.session.query(final2.VehicleNumber).distinct().count()
+    dis_dates= db.session.query(final2.DateofTable).distinct().count()  
+    ratioAuth= final2.query.filter_by(Authorised="No").distinct().count()/final2.query.filter_by(Authorised="Yes").distinct().count()
+    peak_hour= final2.query.filter(db.and_(final2.Entry <="11:00", final2.Entry >"08:30")).distinct().count()
+    peak_hour+= final2.query.filter(db.and_(final2.Entry <="18:30", final2.Entry >="16:30")).distinct().count()
+    return render_template('admin.html',ratio=round(ratioAuth,2), count=round(dis_vehicle,2), avgv_p_d=round(dis_vehicle/dis_dates,2),peak_hr=round(peak_hour/dis_dates,2))
+
+@app.route('/search')
+def search():
+    if login_ornot is False:
+        return render_template('login.html')
+    return render_template('search.html')
+
 
 @app.route('/view')
 def view_default():
@@ -60,7 +72,12 @@ def showdetails():
     if request.method == 'POST':
         idsearch= request.form.get('show_results')
         search = final2.query.all()
-    return render_template('admin.html', showSearch=search)
+    dis_vehicle= db.session.query(final2.VehicleNumber).distinct().count()
+    dis_dates= db.session.query(final2.DateofTable).distinct().count()  
+    ratioAuth= final2.query.filter_by(Authorised="No").distinct().count()/final2.query.filter_by(Authorised="Yes").distinct().count()
+    peak_hour= final2.query.filter(db.and_(final2.Entry <="11:00", final2.Entry >"08:30")).distinct().count()
+    peak_hour+= final2.query.filter(db.and_(final2.Entry <="18:30", final2.Entry >="16:30")).distinct().count()
+    return render_template('admin.html', showSearch=search, ratio=round(ratioAuth,2), count=round(dis_vehicle,2), avgv_p_d=round(dis_vehicle/dis_dates,2),peak_hr=round(peak_hour/dis_dates,2))
 
 
 @app.route('/insert', methods=['GET', 'POST'])    
@@ -79,21 +96,25 @@ def MasterEntry():
     allRecords= master1.query.all()
     return render_template('insert.html', masterrec=allRecords)
 
+
+@app.route('/home/', methods=['GET'])
 def automated_Entry():
-    if request.method=='POST':
-        Number= request.form['vehicle']
-        datenow=current_date
-        entry= hour_and_minute
-        SnoOfexit = exit_or_not(Number)
-        auth= findIt(Number)                                                                                #authorised or not
-        if SnoOfexit is not None:
-            changeit= final2.query.filter_by(Sno= SnoOfexit).first()
-            changeit.Exit=hour_and_minute
-            db.session.commit()
-        else:  
-            new_record=final2(VehicleNumber=Number, DateofTable=datenow, Entry=entry, Authorised= auth)       #entry detail to db
-            db.session.add(new_record)
-            db.session.commit()
+    data1 = request.args.get("data", None)
+    # data = request.get_json()
+    # Number= request.form['vehicle']
+    datenow=current_date
+    entry= hour_and_minute
+    data1=data1.upper()
+    SnoOfexit = exit_or_not(data1)
+    auth= findIt(data1)                                                                               #authorised or not
+    if SnoOfexit is not None:
+        changeit= final2.query.filter_by(Sno= SnoOfexit).first()
+        changeit.Exit=hour_and_minute
+        db.session.commit()
+    else:  
+        new_record=final2(VehicleNumber=data1, DateofTable=datenow, Entry=entry, Authorised= auth)       #entry detail to db
+        db.session.add(new_record)
+        db.session.commit()
         
     temprecords= final2.query.all()
     return render_template('admin.html', allRecords=temprecords)
@@ -117,10 +138,10 @@ def view_all():
     if login_ornot is False:
         return render_template('login.html')
     if request.method == 'POST':
-        idsearch= request.form['IdNum']
+        idsearch= request.form['vehicle']
         idsearch=idsearch.upper()
         search = master1.query.filter_by(VehicleNumber=idsearch).all()
-    return render_template('view.html')
+    return render_template('view.html',showSearch=search)
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -134,6 +155,44 @@ def login():
             return render_template('admin.html')
     return render_template('login.html', error=error)
 
+
+
+@app.route('/home', methods=['GET', 'POST'])
+def deleteit():
+    if request.method=='POST':
+        whom= request.form['deleted']
+    whom=master1.query.filter_by(VehicleNumber=whom).first()
+    db.session.delete(whom)
+    db.session.commit()
+    return redirect(url_for('/home'))
+
+@app.route('/search', methods=['GET', 'POST'])
+def search_sep():
+    if login_ornot is False:
+        return render_template('login.html')
+    if request.method == 'POST':
+        idsearch= request.form['getdetail']
+        idsearch=idsearch.upper()
+        search = final2.query.filter_by(VehicleNumber=idsearch).all()
+    tot_days= db.session.query(final2.DateofTable).filter_by(VehicleNumber=idsearch).distinct().count() 
+    # parking_time= park(idsearch)
+    return render_template('search.html',showSearch=search, totaldays=tot_days)
+
+# def park(id):
+#     entry=db.session.query(final2.Entry).filter_by(VehicleNumber=id).all()
+#     exit=db.session.query(final2.Exit).filter_by(VehicleNumber=id).all()
+#     enter=0
+#     exit=0
+#     for i in entry:
+#         str=i[0]
+#         str=str[:2]
+#         enter+= int(str)
+#     for i in exit:
+#         if i[0] is not None:
+#             str=i[0]
+#             str=str[:2]
+#             exiter+= int(str)
+#     return abs(enter-exit)
 if __name__ == "__main__":
     app.run(debug=True)
 

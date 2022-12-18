@@ -1,3 +1,4 @@
+
 .navbar-brand{
     color: white;
     font-size: 100px;
@@ -32,7 +33,10 @@ table{
     border: 3px solid red;
     border-collapse: collapse;
   }
-
+  tbody{
+    overflow-y:auto;
+    max-height: 200px;
+    }
 th{
     border: 2px solid white;
     border-collapse: collapse;
@@ -81,4 +85,13 @@ td.no {
   }
   #view:hover{
     box-shadow: 0 0 1001px rgba(33,33,33,.2);
+  }
+
+  #view_now{
+    border: 2px solid;
+        margin: auto;
+        position: relative;
+        top: 15%;
+        width: 30%;
+        padding: 10px;
   }
