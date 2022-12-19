@@ -163,16 +163,17 @@ def login():
 
 
 
-@app.route('/view0', methods=['GET', 'POST'])
+@app.route('/view0', methods=['GET', 'POST'])                           #view after deletion
 def deleteit():
     if request.method=='POST':
         whom= request.form['delete1']
+        whom=whom.upper()
         whom1= master1.query.filter_by(VehicleNumber=whom).first()
         db.session.delete(whom1)
         db.session.commit()
     return render_template('view.html')
 
-@app.route('/search', methods=['GET', 'POST'])
+@app.route('/search', methods=['GET', 'POST'])              #to search logs of seperate vehicle
 def search_sep():
     if login_ornot is False:
         return render_template('login.html')
